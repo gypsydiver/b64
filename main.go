@@ -29,13 +29,11 @@ func main() {
 	if *d {
 		reader := decode(os.Stdin, *n)
 		all, _ := ioutil.ReadAll(reader)
-		fmt.Println(string(all))
+		fmt.Print(string(all))
 	} else {
-		out := encode(os.Stdout, *n)
-		defer out.Close()
-
 		clear, _ := ioutil.ReadAll(os.Stdin)
-		out.Write(clear)
+		out := encode(clear, *n)
+		fmt.Print(string(out))
 	}
 }
 
@@ -58,12 +56,15 @@ func progress(r io.Reader) io.Reader {
 	return dst
 }
 
-func encode(r io.WriteCloser, n int) io.WriteCloser {
+func encode(clear []byte, n int) []byte {
 	if n == 0 {
-		return r
+		return clear
 	}
-	if *v {
 
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(clear)))
+	base64.StdEncoding.Encode(dst, clear)
+	if *v && n > 1 {
+		fmt.Println(string(dst))
 	}
-	return encode(base64.NewEncoder(base64.StdEncoding, r), n-1)
+	return encode(dst, n-1)
 }
